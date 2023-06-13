@@ -16,18 +16,28 @@ from tensorboardX import SummaryWriter
 
 def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
+    args = parser.add_argument_group('Options')
 
-    parser.add_argument('--cfg', help='experiment configuration filename', required=True, type=str)
+    args.add_argument('-c','--cfg', help='experiment configuration filename', required=True, type=str)
+    args.add_argument('-d', '--data_root_path', metavar='DIR', required=True,
+                      help='path to dataset')
+    args.add_argument('-dl', '--data_label_path', metavar='DIR', required=True,
+                      help='path to data label path')
+    args.add_argument('-dlf', '--data_file_name', type=str, required=True,
+                      help='data label file name')
 
     args = parser.parse_args()
 
     with open(args.cfg, 'r') as f:
         # config = yaml.load(f, Loader=yaml.FullLoader)
-        config = yaml.load(f)
+        config = yaml.load(f, Loader=yaml.SafeLoader)
         config = edict(config)
 
     config.DATASET.ALPHABETS = alphabets.alphabet
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
+    config.DATA_ROOT_PATH = args.data_root_path
+    config.DATA_LABEL_PATH = args.data_label_path
+    config.DATA_FILE_NAME = args.data_file_name
 
     return config
 
@@ -110,7 +120,13 @@ def main():
             model.load_state_dict(checkpoint)
 
     model_info(model)
-    train_dataset = get_dataset(config)(config, is_train=True)
+
+    train_dataset = get_dataset(config)(config, 
+                                data_path=config.DATA_ROOT_PATH,
+                                data_label_path=config.DATA_LABEL_PATH,
+                                data_file_name=config.DATA_FILE_NAME,
+                                phase='train')
+    
     train_loader = DataLoader(
         dataset=train_dataset,
         batch_size=config.TRAIN.BATCH_SIZE_PER_GPU,
@@ -119,7 +135,11 @@ def main():
         pin_memory=config.PIN_MEMORY,
     )
 
-    val_dataset = get_dataset(config)(config, is_train=False)
+    val_dataset = get_dataset(config)(config, 
+                                data_path=config.DATA_ROOT_PATH,
+                                data_label_path=config.DATA_LABEL_PATH,
+                                data_file_name=config.DATA_FILE_NAME,
+                                phase='test')
     val_loader = DataLoader(
         dataset=val_dataset,
         batch_size=config.TEST.BATCH_SIZE_PER_GPU,

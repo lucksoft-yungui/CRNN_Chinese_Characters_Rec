@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import torch
 
+
 def get_optimizer(config, model):
 
     optimizer = None
@@ -33,6 +34,7 @@ def get_optimizer(config, model):
 
     return optimizer
 
+
 def create_log_folder(cfg, phase='train'):
     root_output_dir = Path(cfg.OUTPUT_DIR)
     # set up logger
@@ -44,7 +46,8 @@ def create_log_folder(cfg, phase='train'):
     model = cfg.MODEL.NAME
 
     time_str = time.strftime('%Y-%m-%d-%H-%M')
-    checkpoints_output_dir = root_output_dir / dataset / model / time_str / 'checkpoints'
+    checkpoints_output_dir = root_output_dir / \
+        dataset / model / time_str / 'checkpoints'
 
     print('=> creating {}'.format(checkpoints_output_dir))
     checkpoints_output_dir.mkdir(parents=True, exist_ok=True)
@@ -53,7 +56,6 @@ def create_log_folder(cfg, phase='train'):
     print('=> creating {}'.format(tensorboard_log_dir))
     tensorboard_log_dir.mkdir(parents=True, exist_ok=True)
 
-
     return {'chs_dir': str(checkpoints_output_dir), 'tb_dir': str(tensorboard_log_dir)}
 
 
@@ -61,7 +63,9 @@ def get_batch_label(d, i):
     label = []
     for idx in i:
         label.append(list(d.labels[idx].values())[0])
+        #print(f"labels:{d.labels[idx]}")
     return label
+
 
 class strLabelConverter(object):
     """Convert between str and label.
@@ -98,15 +102,19 @@ class strLabelConverter(object):
 
         length = []
         result = []
-        decode_flag = True if type(text[0])==bytes else False
+        decode_flag = True if type(text[0]) == bytes else False
 
         for item in text:
 
             if decode_flag:
-                item = item.decode('utf-8','strict')
+                item = item.decode('utf-8', 'strict')
             length.append(len(item))
             for char in item:
-                index = self.dict[char]
+                if char in self.alphabet:
+                    index = self.dict[char]
+                else:
+                    # index of unknown character
+                    index = len(self.alphabet) - 1
                 result.append(index)
         text = result
         return (torch.IntTensor(text), torch.IntTensor(length))
@@ -126,7 +134,8 @@ class strLabelConverter(object):
         """
         if length.numel() == 1:
             length = length[0]
-            assert t.numel() == length, "text with length: {} does not match declared length: {}".format(t.numel(), length)
+            assert t.numel() == length, "text with length: {} does not match declared length: {}".format(
+                t.numel(), length)
             if raw:
                 return ''.join([self.alphabet[i - 1] for i in t])
             else:
@@ -137,7 +146,8 @@ class strLabelConverter(object):
                 return ''.join(char_list)
         else:
             # batch mode
-            assert t.numel() == length.sum(), "texts with length: {} does not match declared length: {}".format(t.numel(), length.sum())
+            assert t.numel() == length.sum(
+            ), "texts with length: {} does not match declared length: {}".format(t.numel(), length.sum())
             texts = []
             index = 0
             for i in range(length.numel()):
@@ -148,16 +158,22 @@ class strLabelConverter(object):
                 index += l
             return texts
 
+
 def get_char_dict(path):
     with open(path, 'rb') as file:
-        char_dict = {num: char.strip().decode('gbk', 'ignore') for num, char in enumerate(file.readlines())}
+        char_dict = {num: char.strip().decode('gbk', 'ignore')
+                     for num, char in enumerate(file.readlines())}
+
 
 def model_info(model):  # Plots a line-by-line description of a PyTorch model
     n_p = sum(x.numel() for x in model.parameters())  # number parameters
-    n_g = sum(x.numel() for x in model.parameters() if x.requires_grad)  # number gradients
-    print('\n%5s %50s %9s %12s %20s %12s %12s' % ('layer', 'name', 'gradient', 'parameters', 'shape', 'mu', 'sigma'))
+    n_g = sum(x.numel() for x in model.parameters()
+              if x.requires_grad)  # number gradients
+    print('\n%5s %50s %9s %12s %20s %12s %12s' %
+          ('layer', 'name', 'gradient', 'parameters', 'shape', 'mu', 'sigma'))
     for i, (name, p) in enumerate(model.named_parameters()):
         name = name.replace('module_list.', '')
         print('%5g %50s %9s %12g %20s %12.3g %12.3g' % (
             i, name, p.requires_grad, p.numel(), list(p.shape), p.mean(), p.std()))
-    print('Model Summary: %g layers, %g parameters, %g gradients\n' % (i + 1, n_p, n_g))
+    print('Model Summary: %g layers, %g parameters, %g gradients\n' %
+          (i + 1, n_p, n_g))

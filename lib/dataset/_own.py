@@ -5,33 +5,37 @@ import numpy as np
 import cv2
 
 class _OWN(data.Dataset):
-    def __init__(self, config, is_train=True):
 
+    def __init__(self, config, data_path: str, data_label_path: str, data_file_name: str, phase: str):
+
+        if not (phase in ['train', 'val', 'test']):
+            raise AssertionError(phase)
+        
         self.root = config.DATASET.ROOT
-        self.is_train = is_train
         self.inp_h = config.MODEL.IMAGE_SIZE.H
         self.inp_w = config.MODEL.IMAGE_SIZE.W
-
-        self.dataset_name = config.DATASET.DATASET
-
         self.mean = np.array(config.DATASET.MEAN, dtype=np.float32)
         self.std = np.array(config.DATASET.STD, dtype=np.float32)
 
-        txt_file = config.DATASET.JSON_FILE['train'] if is_train else config.DATASET.JSON_FILE['val']
+        self.labels = []
+        self.phase = phase
 
-        # convert name:indices to name:string
-        with open(txt_file, 'r', encoding='utf-8') as file:
-            self.labels = [{c.split(' ')[0]: c.split(' ')[-1][:-1]} for c in file.readlines()]
+        img_id_gt_txt = os.path.join(data_label_path, data_file_name + "_" + phase + ".txt")
 
-        print("load {} images!".format(self.__len__()))
+        with open(img_id_gt_txt, 'r', encoding='utf-8') as f:
+            for line in f.readlines():
+                line = line.strip('\n').split(None, 1)
+                img_path = os.path.join(data_path, line[0])
+                if os.path.exists(img_path) and os.stat(img_path).st_size > 0 and line[1]:
+                    self.labels.append({img_path: line[1]})
 
     def __len__(self):
         return len(self.labels)
 
     def __getitem__(self, idx):
 
-        img_name = list(self.labels[idx].keys())[0]
-        img = cv2.imread(os.path.join(self.root, img_name))
+        img_path = list(self.labels[idx].keys())[0]
+        img = cv2.imread(img_path)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         img_h, img_w = img.shape

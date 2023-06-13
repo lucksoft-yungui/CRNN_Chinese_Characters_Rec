@@ -68,7 +68,7 @@ class CRNN(nn.Module):
         # conv features
         conv = self.cnn(input)
         b, c, h, w = conv.size()
-        print(conv.size())
+        # print(conv.size())
         assert h == 1, "the height of conv must be 1"
         conv = conv.squeeze(2) # b *512 * width
         conv = conv.permute(2, 0, 1)  # [w, b, c]
@@ -86,7 +86,7 @@ def weights_init(m):
 
 def get_crnn(config):
 
-    model = CRNN(config.MODEL.IMAGE_SIZE.H, 1, config.MODEL.NUM_CLASSES + 1, config.MODEL.NUM_HIDDEN)
+    model = CRNN(config.MODEL.IMAGE_SIZE.H, 1, config.MODEL.NUM_CLASSES + 2, config.MODEL.NUM_HIDDEN)
     model.apply(weights_init)
 
     return model
