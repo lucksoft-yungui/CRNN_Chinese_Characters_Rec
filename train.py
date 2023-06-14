@@ -19,12 +19,6 @@ def parse_arg():
     args = parser.add_argument_group('Options')
 
     args.add_argument('-c','--cfg', help='experiment configuration filename', required=True, type=str)
-    args.add_argument('-d', '--data_root_path', metavar='DIR', required=True,
-                      help='path to dataset')
-    args.add_argument('-dl', '--data_label_path', metavar='DIR', required=True,
-                      help='path to data label path')
-    args.add_argument('-dlf', '--data_file_name', type=str, required=True,
-                      help='data label file name')
 
     args = parser.parse_args()
 
@@ -35,9 +29,6 @@ def parse_arg():
 
     config.DATASET.ALPHABETS = alphabets.alphabet
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
-    config.DATA_ROOT_PATH = args.data_root_path
-    config.DATA_LABEL_PATH = args.data_label_path
-    config.DATA_FILE_NAME = args.data_file_name
 
     return config
 
