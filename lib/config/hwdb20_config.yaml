@@ -42,7 +42,7 @@ TRAIN:
   RMSPROP_ALPHA:
   RMSPROP_CENTERED:
   FINETUNE:
-    IS_FINETUNE: true
+    IS_FINETUNE: False
     FINETUNE_CHECKPOINIT: 'output/checkpoints/mixed_second_finetune_acc_97P7.pth'
     FREEZE: true
 
