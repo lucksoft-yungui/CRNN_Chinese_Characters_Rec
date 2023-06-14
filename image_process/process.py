@@ -1,24 +1,44 @@
 import cv2
 import numpy as np
+import torch
+#import torchvision.transforms as transforms
+
+# class ZerosPAD(object):
+#     def __init__(self, max_size):
+#         self.toTensor = transforms.ToTensor()
+#         self.max_size = max_size
+
+#     def __call__(self, img):
+#         img = self.toTensor(img)
+#         c, h, w = img.shape
+#         Pad_img = torch.FloatTensor(*self.max_size).fill_(0)
+#         Pad_img[:, :, :w] = img  # right pad
+
+#         return Pad_img
+    
 
 mean = 0.588
 std = 0.193
-inp_w = 160
+inp_w = 320
 inp_h = 32
 
-img = cv2.imread("./image-000000006.jpg")
+img = cv2.imread("/Users/peiyandong/Documents/code/ai/CRNN_Chinese_Characters_Rec/image_process/20230614091829.jpg")
 img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-img_h, img_w = img.shape
+img = np.array(img)
 
-img = cv2.resize(img, (0,0), fx=inp_w / img_w, fy=inp_h / img_h, interpolation=cv2.INTER_CUBIC)
+img = img[:, :, np.newaxis]
+
+height, width = img.shape[:2]
+ratio = inp_h/height
+new_width = int(width * ratio)
+img = cv2.resize(img, (new_width, inp_h), interpolation=cv2.INTER_AREA)
 
 
 cv2.imshow('img', img)
 cv2.waitKey(0)
 
-img = np.reshape(img, (inp_h, inp_w, 1))
-
+img = np.reshape(img, (inp_h, new_width, 1))
 img = img.astype(np.float32)
 img = (img/255. - mean) / std
 img = img.transpose([2, 0, 1])
@@ -31,4 +51,3 @@ img_disp = np.squeeze(img_disp)
 
 cv2.imshow('img', img_disp)
 cv2.waitKey(0)
-

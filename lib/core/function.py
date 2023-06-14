@@ -49,6 +49,9 @@ def train(config, train_loader, dataset, converter, model, criterion, optimizer,
         preds_size = torch.IntTensor([preds.size(0)] * batch_size) # timestep * batchsize
         loss = criterion(preds, text, preds_size, length)
 
+        # print(f"tru_size:{length}")
+        # print(f"preds_size:{preds_size}")
+
         if torch.isnan(loss):
             raise ValueError('Stop at NaN loss.')
 

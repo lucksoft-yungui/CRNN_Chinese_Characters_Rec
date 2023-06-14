@@ -11,14 +11,17 @@ from lib.dataset import get_dataset
 from lib.core import function
 import lib.config.alphabets as alphabets
 from lib.utils.utils import model_info
+from lib.utils.imgprocess import AlignCollate
 
 from tensorboardX import SummaryWriter
+
 
 def parse_arg():
     parser = argparse.ArgumentParser(description="train crnn")
     args = parser.add_argument_group('Options')
 
-    args.add_argument('-c','--cfg', help='experiment configuration filename', required=True, type=str)
+    args.add_argument(
+        '-c', '--cfg', help='experiment configuration filename', required=True, type=str)
 
     args = parser.parse_args()
 
@@ -31,6 +34,7 @@ def parse_arg():
     config.MODEL.NUM_CLASSES = len(config.DATASET.ALPHABETS)
 
     return config
+
 
 def main():
 
@@ -112,41 +116,40 @@ def main():
 
     model_info(model)
 
-    train_dataset = get_dataset(config)(config, 
-                                data_path=config.DATA_ROOT_PATH,
-                                data_label_path=config.DATA_LABEL_PATH,
-                                data_file_name=config.DATA_FILE_NAME,
-                                phase='train')
-    
+    train_dataset = get_dataset(config)(config, phase='train')
+
+    AlignCollate_train = AlignCollate(imgH=config.MODEL.IMAGE_SIZE.H)
+
     train_loader = DataLoader(
         dataset=train_dataset,
         batch_size=config.TRAIN.BATCH_SIZE_PER_GPU,
         shuffle=config.TRAIN.SHUFFLE,
         num_workers=config.WORKERS,
         pin_memory=config.PIN_MEMORY,
+        collate_fn = AlignCollate_train
     )
 
-    val_dataset = get_dataset(config)(config, 
-                                data_path=config.DATA_ROOT_PATH,
-                                data_label_path=config.DATA_LABEL_PATH,
-                                data_file_name=config.DATA_FILE_NAME,
-                                phase='test')
+    val_dataset = get_dataset(config)(config, phase='test')
+
     val_loader = DataLoader(
         dataset=val_dataset,
         batch_size=config.TEST.BATCH_SIZE_PER_GPU,
         shuffle=config.TEST.SHUFFLE,
         num_workers=config.WORKERS,
         pin_memory=config.PIN_MEMORY,
+        collate_fn = AlignCollate_train
     )
 
     best_acc = 0.5
     converter = utils.strLabelConverter(config.DATASET.ALPHABETS)
     for epoch in range(last_epoch, config.TRAIN.END_EPOCH):
 
-        function.train(config, train_loader, train_dataset, converter, model, criterion, optimizer, device, epoch, writer_dict, output_dict)
+        function.train(config, train_loader, train_dataset, converter, model,
+                       criterion, optimizer, device, epoch, writer_dict, output_dict)
         lr_scheduler.step()
 
-        acc = function.validate(config, val_loader, val_dataset, converter, model, criterion, device, epoch, writer_dict, output_dict)
+        acc = function.validate(config, val_loader, val_dataset, converter,
+                                model, criterion, device, epoch, writer_dict, output_dict)
 
         is_best = acc > best_acc
         best_acc = max(acc, best_acc)
@@ -165,6 +168,7 @@ def main():
         )
 
     writer_dict['writer'].close()
+
 
 if __name__ == '__main__':
 

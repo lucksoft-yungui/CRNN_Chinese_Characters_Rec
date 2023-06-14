@@ -19,7 +19,7 @@ class _360CC(data.Dataset):
 
         char_file = config.DATASET.CHAR_FILE
         with open(char_file, 'rb') as file:
-            char_dict = {num: char.strip().decode('utf-8', 'ignore') for num, char in enumerate(file.readlines())}
+            char_dict = {num: char.strip().decode('gbk', 'ignore') for num, char in enumerate(file.readlines())}
 
         txt_file = config.DATASET.JSON_FILE['train'] if is_train else config.DATASET.JSON_FILE['val']
 

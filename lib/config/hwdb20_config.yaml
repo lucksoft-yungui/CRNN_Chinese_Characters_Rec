@@ -11,8 +11,8 @@ CUDNN:
   ENABLED: True
 
 DATASET:
-  DATASET: HWDB20
-  DATA_ROOT_PATH: "/Users/peiyandong/Documents/code/ai/common_train_data/images"
+  DATASET: HWDB
+  DATA_ROOT_PATH: "/kaggle/input/handwrite/train_data"
   DATA_LABEL_PATH: "data/HWDB"
   DATA_FILE_NAME: "HWDB2.0_label"
   CHAR_FILE: 'lib/dataset/txt/char_std_5990.txt'
@@ -57,7 +57,7 @@ MODEL:
   IMAGE_SIZE:
     OW: 280 # origial width: 280
     H: 32
-    W: 160   # resized width: 160
+    W: 320   # resized width: 160
   NUM_CLASSES: 0
   NUM_HIDDEN: 256
 
